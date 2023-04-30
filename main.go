@@ -7,10 +7,30 @@ import (
 
 	"server/config"
 	. "server/config"
+	docs "server/docs"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// @BasePath /api/v1
+// PingExample godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Ping
+// @Router /ping [get]
+// r.GET("/api/v1/ping", Ping)
+func Ping(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "success",
+	})
+}
 
 func main() {
 	err := godotenv.Load(".env")
@@ -33,11 +53,13 @@ func main() {
 	fmt.Println("")
 
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "success",
-		})
-	})
-	r.Run(fmt.Sprintf("localhost:%s", os.Getenv("PORT")))
-	fmt.Println("Server is running")
+	// Set up swagger
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	v1 := r.Group("/api/v1")
+	{
+		v1.GET("/ping", Ping)
+	}
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))
 }
