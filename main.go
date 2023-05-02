@@ -54,15 +54,17 @@ func main() {
 	// Set up tigris
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	db, err := tigris.OpenDatabase(ctx, &tigris.Config{
+	tigris.OpenDatabase(ctx, &tigris.Config{
 		URL:          tigris_env.URL,
 		ClientID:     tigris_env.ClientId,
 		ClientSecret: tigris_env.ClientSecret,
 		Project:      tigris_env.Name,
 	})
-	if err != nil {
-		panic(err)
-	}
+	fmt.Println("Connected db")
+
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	r := gin.Default()
 	// Set up swagger
