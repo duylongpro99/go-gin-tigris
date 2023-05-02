@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"server/config"
 	. "server/config"
@@ -13,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/tigrisdata/tigris-client-go/tigris"
 )
 
 // @BasePath /api/v1
@@ -42,15 +45,24 @@ func main() {
 	// get tigris config
 	tigris_env := &config.TigrisEnv{}
 	tigris_env = GetTigrisEnv()
-
 	fmt.Println("")
 	fmt.Println("**************TIGRIS*****************")
-	fmt.Println("*************************************")
 	fmt.Println("TIGRIS DATABASE:", tigris_env.Name)
 	fmt.Println("TIGRIS BRANCH:", tigris_env.Branch)
 	fmt.Println("*************************************")
-	fmt.Println("*************************************")
 	fmt.Println("")
+	// Set up tigris
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	db, err := tigris.OpenDatabase(ctx, &tigris.Config{
+		URL:          tigris_env.URL,
+		ClientID:     tigris_env.ClientId,
+		ClientSecret: tigris_env.ClientSecret,
+		Project:      tigris_env.Name,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	r := gin.Default()
 	// Set up swagger
