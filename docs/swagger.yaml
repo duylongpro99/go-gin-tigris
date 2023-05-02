@@ -16,4 +16,79 @@ paths:
       summary: ping example
       tags:
       - example
+  /users/:id:
+    get:
+      consumes:
+      - application/json
+      description: Read user by id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Read user by id
+      tags:
+      - Users
+  /users/create:
+    post:
+      consumes:
+      - application/json
+      description: Create user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Create user
+      tags:
+      - Users
+  /users/delete/:id:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Delete user
+      tags:
+      - Users
+  /users/search:
+    post:
+      consumes:
+      - application/json
+      description: Search list users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Search list users
+      tags:
+      - Users
+  /users/update:
+    put:
+      consumes:
+      - application/json
+      description: Update user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Update user
+      tags:
+      - Users
 swagger: "2.0"

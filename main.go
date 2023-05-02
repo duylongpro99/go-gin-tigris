@@ -10,6 +10,7 @@ import (
 	"server/config"
 	. "server/config"
 	docs "server/docs"
+	models "server/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -36,6 +37,17 @@ func Ping(c *gin.Context) {
 }
 
 func main() {
+	r := gin.Default()
+
+	// Set up swagger
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	v1 := r.Group("/api/v1")
+	{
+		v1.GET("/ping", Ping)
+	}
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalln("Cant not load env")
@@ -54,26 +66,19 @@ func main() {
 	// Set up tigris
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	tigris.OpenDatabase(ctx, &tigris.Config{
+	db, err := tigris.OpenDatabase(ctx, &tigris.Config{
 		URL:          tigris_env.URL,
 		ClientID:     tigris_env.ClientId,
 		ClientSecret: tigris_env.ClientSecret,
 		Project:      tigris_env.Name,
-	})
-	fmt.Println("Connected db")
+	}, &models.User{})
 
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	r := gin.Default()
-	// Set up swagger
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	v1 := r.Group("/api/v1")
-	{
-		v1.GET("/ping", Ping)
+	if err != nil {
+		panic(err)
 	}
 
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	fmt.Println("Connected db")
+	models.SetCRUDRoutes[models.User](r, db, "users")
+
 	r.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))
 }
