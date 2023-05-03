@@ -1,22 +1,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-	"time"
 
-	"server/config"
-	. "server/config"
+	serverConfig "server/config"
 	docs "server/docs"
-	models "server/models"
+	controllers "server/src/controllers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/tigrisdata/tigris-client-go/tigris"
 )
 
 // @BasePath /api/v1
@@ -37,6 +33,14 @@ func Ping(c *gin.Context) {
 }
 
 func main() {
+	// Load env
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalln("Cant not load env")
+	}
+	fmt.Println("Load env success")
+
+	// Init gin
 	r := gin.Default()
 
 	// Set up swagger
@@ -45,40 +49,14 @@ func main() {
 	{
 		v1.GET("/ping", Ping)
 	}
-
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalln("Cant not load env")
-	}
-	fmt.Println("Load env success")
+	// Init tigris
+	serverConfig.InitTigris()
 
-	// get tigris config
-	tigris_env := &config.TigrisEnv{}
-	tigris_env = GetTigrisEnv()
-	fmt.Println("")
-	fmt.Println("**************TIGRIS*****************")
-	fmt.Println("TIGRIS DATABASE:", tigris_env.Name)
-	fmt.Println("TIGRIS BRANCH:", tigris_env.Branch)
-	fmt.Println("*************************************")
-	fmt.Println("")
-	// Set up tigris
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	db, err := tigris.OpenDatabase(ctx, &tigris.Config{
-		URL:          tigris_env.URL,
-		ClientID:     tigris_env.ClientId,
-		ClientSecret: tigris_env.ClientSecret,
-		Project:      tigris_env.Name,
-	}, &models.User{})
+	// Init server 	controllers
+	controllers.InitControllers(r)
 
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Connected db")
-	models.SetCRUDRoutes[models.User](r, db, "users")
-
+	// Start server
 	r.Run(fmt.Sprintf(":%s", os.Getenv("PORT")))
 }
